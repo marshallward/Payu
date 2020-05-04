@@ -72,8 +72,6 @@ def read_config(config_fname=None):
         else:
             raise
 
-
-
     collate_config = config.pop('collate', {})
 
     # Transform legacy collate config options

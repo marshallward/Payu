@@ -47,8 +47,11 @@ class Slurm(Scheduler):
 
         return cmd
 
-    def get_output_logs(self):
+    def get_output_logs(self, expt):
         """Return the Slurm output logs in the current directory."""
+
+        # NOTE: expt is not used, but is part of the generic interface.
+        #   This usually indicates bad design somewhere.
 
         logs = [
             f for f in os.listdir(os.curdir)

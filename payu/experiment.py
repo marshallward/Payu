@@ -952,10 +952,7 @@ class Experiment(object):
                   ''.format(script_cmd, exc.returncode))
 
     def sweep(self, hard_sweep=False):
-        default_job_name = os.path.basename(os.getcwd())
-        short_job_name = str(self.config.get('jobname', default_job_name))[:15]
-
-        logs = self.scheduler.get_output_logs()
+        logs = self.scheduler.get_output_logs(self)
 
         pbs_log_path = os.path.join(self.archive_path, 'pbs_logs')
         legacy_pbs_log_path = os.path.join(self.control_path, 'pbs_logs')

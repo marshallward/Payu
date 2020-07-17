@@ -130,8 +130,10 @@ class PBS(Scheduler):
 
         return cmd
 
-    def get_output_logs(self):
+    def get_output_logs(self, expt):
         """Return the PBS output logs in the current directory."""
+        default_job_name = os.path.basename(os.getcwd())
+        short_job_name = str(expt.config.get('jobname', default_job_name))[:15]
 
         # NOTE: This is very specific to NCI's PBS output.
         logs = [

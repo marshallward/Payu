@@ -130,6 +130,23 @@ class PBS(Scheduler):
 
         return cmd
 
+    def get_output_logs(self):
+        """Return the PBS output logs in the current directory."""
+
+        # NOTE: This is very specific to NCI's PBS output.
+        logs = [
+            f for f in os.listdir(os.curdir) if os.path.isfile(f) and (
+                f.startswith(short_job_name + '.o') or
+                f.startswith(short_job_name + '.e') or
+                f.startswith(short_job_name[:13] + '_c.o') or
+                f.startswith(short_job_name[:13] + '_c.e') or
+                f.startswith(short_job_name[:13] + '_p.o') or
+                f.startswith(short_job_name[:13] + '_p.e')
+            )
+        ]
+
+        return logs
+
 
 # TODO: These support functions can probably be integrated into the class
 

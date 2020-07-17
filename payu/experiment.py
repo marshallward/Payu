@@ -26,6 +26,7 @@ import yaml
 # Local
 from payu import envmod
 from payu.fsops import mkdir_p, make_symlink, read_config, movetree
+from payu.schedulers import index as scheduler_index
 from payu.schedulers.pbs import get_job_info, pbs_env_init, get_job_id
 from payu.models import index as model_index
 import payu.profilers
@@ -60,6 +61,12 @@ class Experiment(object):
 
         # TODO: __init__ should not be a config dumping ground!
         self.config = read_config()
+
+        # Assign a scheduler
+        # TODO: Unlikely this is the best place to store this
+        scheduler_name = self.config.get('scheduler', 'pbs')
+        scheduler_type = scheduler_index[scheduler_name]
+        self.scheduler = scheduler_type()
 
         # Payu experiment type
         self.debug = self.config.get('debug', False)
@@ -225,6 +232,7 @@ class Experiment(object):
         # NOTE: This function is increasingly irrelevant, and may be removable.
 
         # Scheduler
+        # TODO: use self.scheduler
         sched_modname = self.config.get('scheduler', 'pbs')
         self.modules.add(sched_modname)
 
@@ -519,6 +527,8 @@ class Experiment(object):
                 )
 
             model_prog = []
+
+            # TODO: Use self.scheduler to resolve slurm conditionals
 
             if mpi_module.startswith('openmpi'):
                 # Our MPICH wrapper does not support a working directory flag
@@ -942,28 +952,15 @@ class Experiment(object):
                   ''.format(script_cmd, exc.returncode))
 
     def sweep(self, hard_sweep=False):
-        # TODO: Fix the IO race conditions!
-
-        # TODO: model outstreams and pbs logs need to be handled separately
         default_job_name = os.path.basename(os.getcwd())
         short_job_name = str(self.config.get('jobname', default_job_name))[:15]
 
-        logs = [
-            f for f in os.listdir(os.curdir) if os.path.isfile(f) and (
-                f.startswith(short_job_name + '.o') or
-                f.startswith(short_job_name + '.e') or
-                f.startswith(short_job_name[:13] + '_c.o') or
-                f.startswith(short_job_name[:13] + '_c.e') or
-                f.startswith(short_job_name[:13] + '_p.o') or
-                f.startswith(short_job_name[:13] + '_p.e')
-            )
-        ]
+        logs = self.scheduler.get_output_logs()
 
         pbs_log_path = os.path.join(self.archive_path, 'pbs_logs')
         legacy_pbs_log_path = os.path.join(self.control_path, 'pbs_logs')
 
         if os.path.isdir(legacy_pbs_log_path):
-            # TODO: New path may still exist!
             assert not os.path.isdir(pbs_log_path)
             print('payu: Moving pbs_logs to {0}'.format(pbs_log_path))
             shutil.move(legacy_pbs_log_path, pbs_log_path)

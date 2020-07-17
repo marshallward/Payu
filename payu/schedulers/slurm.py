@@ -46,3 +46,15 @@ class Slurm(Scheduler):
         )
 
         return cmd
+
+    def get_output_logs(self):
+        """Return the Slurm output logs in the current directory."""
+
+        logs = [
+            f for f in os.listdir(os.curdir)
+            if os.path.isfile(f)
+            and f.startswith('slurm-')
+            and f.endswith('.out')
+        ]
+
+        return logs
